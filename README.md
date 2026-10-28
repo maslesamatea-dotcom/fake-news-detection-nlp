@@ -1,68 +1,70 @@
-# Detekcija lažnih vijesti (NLP + mašinsko učenje)
+# Fake News Detection (NLP + Machine Learning)
 
-Projektni rad iz predmeta Veštačka inteligencija
-- **Autor:** Matea Masleša
-- **Predmetni nastavnik:** dr Đorđe Petrović
-- **Škola:** Visoka škola strukovnih studija za informacione tehnologije (ITS), Beograd, jun 2026.
+**Language:** English | [Srpski](README.sr.md)
 
-## Cilj
+Course project, Artificial Intelligence
+- **Author:** Matea Masleša
+- **Course instructor:** Dr Đorđe Petrović
+- **School:** Information Technology School (ITS), Belgrade, June 2026
 
-Binarna klasifikacija teksta: da li je vijest **lažna (fake)** ili **istinita (real)**. Poređeni su TF-IDF vektorizacija i tri klasifikatora: Logistička regresija, Naive Bayes i Random Forest.
+## Goal
 
-## Podaci
+Binary text classification: is a news article **fake** or **real**. TF-IDF vectorisation and three classifiers are compared: Logistic Regression, Naive Bayes and Random Forest.
 
-- **Izvor:** Kaggle, *Fake and Real News Dataset* ([link](https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset)). Podaci nisu u repozitoriju (vidi `data/README.md`).
-- **Veličina:** 23.481 lažnih i 21.417 istinitih vijesti (ukupno 44.898), na engleskom jeziku, uglavnom političke teme iz perioda 2015–2018, s fokusom na američke izbore 2016.
-- **Kolone:** naslov, tekst, kategorija i datum. Kategorija i datum se ne koriste kao feature-i, model uči samo iz teksta.
-- **Čišćenje skupa:** uklonjeno 6.252 duplikata po tekstu (preostalo 38.646), pa zapisi sa tekstom kraćim od 100 i naslovom kraćim od 5 karaktera. Konačni skup ima **38.343** vijesti: 30.674 za trening (13.721 lažnih, 16.953 istinitih) i 7.669 za test (3.431 lažnih, 4.238 istinitih).
+## Data
 
-## Metodologija
+- **Source:** Kaggle, *Fake and Real News Dataset* ([link](https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset)). The data are not in the repository (see `data/README.md`).
+- **Size:** 23,481 fake and 21,417 real articles (44,898 in total), in English, mostly political topics from 2015–2018 with a focus on the 2016 US election.
+- **Columns:** title, text, category and date. Category and date are not used as features; the model learns from the text only.
+- **Dataset cleaning:** 6,252 duplicates (by text) were removed (38,646 remaining), then records with text shorter than 100 or title shorter than 5 characters. The final set has **38,343** articles: 30,674 for training (13,721 fake, 16,953 real) and 7,669 for testing (3,431 fake, 4,238 real).
 
-1. **Priprema teksta** (`clean_text`): mala slova, uklanjanje URL-ova, uklanjanje oznake agencije *Reuters* (da model ne uči izvor umjesto sadržaja), uklanjanje znakova i brojeva, stopwords (NLTK), tokena kraćih od 3 slova i lematizacija (WordNet).
-2. **Podjela:** 80/20, stratifikovana, `random_state=42`. Vektorizator se uči (`fit`) samo na trening skupu, a na testu se primjenjuje samo `transform`, da se izbjegne curenje podataka.
+## Methodology
+
+1. **Text preparation** (`clean_text`): lower-casing, removing URLs, removing the *Reuters* agency tag (so the model does not learn the source instead of the content), removing punctuation and digits, stopwords (NLTK), tokens shorter than 3 letters, and lemmatisation (WordNet).
+2. **Split:** 80/20, stratified, `random_state=42`. The vectoriser is fitted (`fit`) on the training set only and only applied (`transform`) to the test set, to avoid data leakage.
 3. **TF-IDF:** `max_features=30000`, `ngram_range=(1, 2)`, `min_df=3`, `sublinear_tf=True`.
-4. **Modeli:** Logistička regresija (`C=1.0`, L2), Multinomijalni Naive Bayes (`alpha=0.1`), Random Forest (200 stabala, `max_depth=30`, `min_samples_leaf=2`).
-5. **Evaluacija:** hold-out na test skupu (accuracy, precision, recall, F1, ROC-AUC, matrica konfuzije) i kvalitativna analiza grešaka.
+4. **Models:** Logistic Regression (`C=1.0`, L2), Multinomial Naive Bayes (`alpha=0.1`), Random Forest (200 trees, `max_depth=30`, `min_samples_leaf=2`).
+5. **Evaluation:** hold-out on the test set (accuracy, precision, recall, F1, ROC-AUC, confusion matrix) and qualitative error analysis.
 
-## Rezultati (test skup, 7.669 vijesti)
+## Results (test set, 7,669 articles)
 
 | Model | Accuracy | Precision (fake) | Recall (fake) | F1 (fake) | ROC-AUC |
 |---|---|---|---|---|---|
-| **Logistička regresija** | **98,40%** | 98,9% | 97,5% | 98,2% | **0,9985** |
-| Random Forest | 96,49% | 98,3% | 93,7% | 96,0% | 0,9961 |
-| Naive Bayes | 95,58% | 94,9% | 95,2% | 95,1% | 0,9901 |
+| **Logistic Regression** | **98.40%** | 98.9% | 97.5% | 98.2% | **0.9985** |
+| Random Forest | 96.49% | 98.3% | 93.7% | 96.0% | 0.9961 |
+| Naive Bayes | 95.58% | 94.9% | 95.2% | 95.1% | 0.9901 |
 
-Vrijednosti su izračunate iz matrica konfuzije na test skupu (`results/07_matrice_konfuzije.png`), a tabela je u `results/rezultati_modela.csv`.
+The values are computed from the confusion matrices on the test set (`results/07_matrice_konfuzije.png`), and the table is in `results/rezultati_modela.csv`.
 
-**Glavni nalazi**
-- Logistička regresija ima najbolje rezultate. Linearni modeli dobro rade na visokodimenzionalnim rijetkim TF-IDF matricama, a koeficijenti su interpretabilni.
-- Random Forest ima visoku preciznost, ali propušta više lažnih vijesti (215 naspram 87 kod Logističke regresije).
-- Greške modela: lažne vijesti pisane formalnim novinarskim stilom prolaze kao istinite, a istinite vijesti o kontroverznim temama sa emotivnim rječnikom označavaju se kao lažne. Model dakle uči **stil i vokabular**, a ne istinitost tvrdnji.
+**Key findings**
+- Logistic Regression performs best. Linear models work well on high-dimensional sparse TF-IDF matrices, and the coefficients are interpretable.
+- Random Forest has high precision but misses more fake articles (215 vs 87 for Logistic Regression).
+- Errors: fake articles written in a formal journalistic style pass as real, and real articles about controversial topics with emotional wording are flagged as fake. The model therefore learns **style and vocabulary**, not the truthfulness of claims.
 
-## Ograničenja
+## Limitations
 
-- Vijesti dolaze iz jasno razdvojenih izvora, pa klase mogu imati sistematske razlike u stilu, pa je visoka tačnost djelimično posljedica samog skupa. Na heterogenijim izvorima tačnost bi vjerovatno bila niža.
-- Samo engleski jezik i uska tematika (američka politika 2015–2018).
-- Jedna hold-out podjela, bez unakrsne validacije i bez sistematske optimizacije hiperparametara.
-- Lematizator bez označavanja vrste riječi pravi greške (npr. *was* postaje *wa*).
-- Na kratkim primjerima izvan skupa model je nesiguran: za realno zvučeću vijest o izvršnoj uredbi (2021+) vjerovatnoće su 50,1% fake naspram 49,9% real (`predict_news()` u bilježnici). Skup pokriva samo 2015–2018.
-- Uklonjena je samo oznaka *Reuters*; druge formalne razlike u izvorima (npr. početak teksta sa nazivom grada) mogu i dalje biti signal za model.
-- Sistem ne provjerava činjenice, već prepoznaje obrasce u tekstu, pa ne može zamijeniti ručnu provjeru.
+- The articles come from clearly separated sources, so the classes may differ systematically in style, and the high accuracy is partly a property of the dataset. On more heterogeneous sources accuracy would probably be lower.
+- English only and a narrow topic range (US politics 2015–2018).
+- A single hold-out split, with no cross-validation and no systematic hyperparameter tuning.
+- The lemmatiser without part-of-speech tagging makes errors (e.g. *was* becomes *wa*).
+- On short examples outside the dataset the model is uncertain: for a realistic-sounding news item about an executive order (2021+) the probabilities are 50.1% fake vs 49.9% real (`predict_news()` in the notebook). The dataset covers only 2015–2018.
+- Only the *Reuters* tag was removed; other formal differences between sources (e.g. a text starting with a city name) may still be a signal for the model.
+- The system does not check facts; it recognises patterns in text, so it cannot replace manual verification.
 
-## Moguća unapređenja
+## Possible improvements
 
-Naslov kao zaseban feature, word embeddings (Word2Vec, GloVe) i fine-tuning predtreniranih modela (npr. BERT).
+The title as a separate feature, word embeddings (Word2Vec, GloVe) and fine-tuning pretrained models (e.g. BERT).
 
-## Struktura i pokretanje
+## Structure and usage
 
 ```
-data/        uputstvo za preuzimanje podataka
-notebooks/   fake_news_detection.ipynb (kod sa sačuvanim izlazima)
-results/     grafici i tabela rezultata
+data/        instructions for downloading the data
+notebooks/   fake_news_detection.ipynb (code with saved outputs)
+results/     figures and results table
 ```
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Preuzmi `Fake.csv` i `True.csv` u `data/` (vidi `data/README.md`), pa pokreni `jupyter notebook notebooks/fake_news_detection.ipynb`.
+Download `Fake.csv` and `True.csv` into `data/` (see `data/README.md`), then run `jupyter notebook notebooks/fake_news_detection.ipynb`. The notebook comments are in Serbian.
